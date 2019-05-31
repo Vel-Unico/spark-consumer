@@ -1,4 +1,4 @@
-package com.dossier.etl;
+package com.avik.consumer;
 
 import java.sql.Time;
 import java.util.Arrays;
