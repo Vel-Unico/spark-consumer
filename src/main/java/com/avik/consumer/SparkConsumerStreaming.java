@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
+import org.apache.kafka.common.serialization.StringDeserializer;
 
 public class SparkConsumerStreaming {
 
@@ -46,8 +47,8 @@ public class SparkConsumerStreaming {
         ProducerProperties producerProperties = new ProducerProperties();
         Map<String, String> property = producerProperties.getPropValues();
         kafkaParams.put("bootstrap.servers", property.get("BOOTSTRAP-SERVERS"));
-        kafkaParams.put("key.deserializer", org.apache.kafka.common.serialization.StringDeserializer.class);
-        kafkaParams.put("value.deserializer", org.apache.kafka.common.serialization.StringDeserializer.class);
+        kafkaParams.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        kafkaParams.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("group.id", "test-consumer-group");
         // kafkaParams.put("auto.offset.reset", args[2]);
 
