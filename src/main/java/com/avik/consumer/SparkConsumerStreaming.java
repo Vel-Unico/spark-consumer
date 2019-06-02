@@ -24,7 +24,6 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
-import org.apache.kafka.common.serialization.StringDeserializer;
 
 public class SparkConsumerStreaming {
 
@@ -61,13 +60,13 @@ public class SparkConsumerStreaming {
         System.out.println("start1");
 
         // String path = "output/file-";
-        String path = "user/hadoop/test/";
+        String path = "/user/hadoop/test/";
         DateTimeFormatter dft = DateTimeFormatter.ofPattern("HH-mm-ss");
 
         stream.foreachRDD(rdd -> {
             rdd.foreach(line -> {
                 System.out.println(line.value());
-                sendMessage(args[0], line.value());
+                // sendMessage(args[0], line.value());
             });
 
             LocalDateTime now = LocalDateTime.now();
