@@ -45,7 +45,7 @@ public class SparkConsumerStreaming {
         JavaStreamingContext jsc = new JavaStreamingContext(sc, new Duration(Integer.valueOf(args[1])));
 
         Map<String, Object> kafkaParams = new HashMap<String, Object>();
-        kafkaParams.put("bootstrap.servers", property.get("BOOTSTRAP-SERVERS"));
+        kafkaParams.put("bootstrap.servers", "BOOTSTRAP-SERVERS");
         kafkaParams.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("group.id", "test-consumer-group");
