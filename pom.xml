@@ -3,10 +3,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>spark-streaming-kafka</groupId>
-	<artifactId>spark-streaming-kafka</artifactId>
+	<groupId>spark</groupId>
+	<artifactId>spark</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>spark-streaming-kafka</name>
+	<name>spark</name>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<plugins>
