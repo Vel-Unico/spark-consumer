@@ -32,6 +32,9 @@ public class SparkConsumerStreaming {
     public static void main(String[] args) throws InterruptedException, IOException {
         Logger.getLogger("org").setLevel(Level.ERROR);
         Logger.getLogger("akka").setLevel(Level.ERROR);
+        ProducerProperties producerProperties0 = new ProducerProperties();
+        Map<String, String> property0 = producerProperties0.getPropValues();
+        System.out.println(property0.get("BOOTSTRAP-SERVERS"));
 
         // System.setProperty("hadoop.home.dir", "F:\\avik\\winutils");
         SparkSession ss = SparkSession.builder().getOrCreate();
