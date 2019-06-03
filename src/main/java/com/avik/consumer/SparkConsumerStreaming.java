@@ -32,9 +32,8 @@ public class SparkConsumerStreaming {
     public static void main(String[] args) throws InterruptedException, IOException {
         Logger.getLogger("org").setLevel(Level.ERROR);
         Logger.getLogger("akka").setLevel(Level.ERROR);
-        ProducerProperties producerProperties0 = new ProducerProperties();
-        Map<String, String> property0 = producerProperties0.getPropValues();
-        System.out.println(property0.get("BOOTSTRAP-SERVERS"));
+        ProducerProperties producerProperties = new ProducerProperties();
+        Map<String, String> property = producerProperties.getPropValues();
 
         // System.setProperty("hadoop.home.dir", "F:\\avik\\winutils");
         SparkSession ss = SparkSession.builder().getOrCreate();
@@ -46,9 +45,7 @@ public class SparkConsumerStreaming {
         JavaStreamingContext jsc = new JavaStreamingContext(sc, new Duration(Integer.valueOf(args[1])));
 
         Map<String, Object> kafkaParams = new HashMap<String, Object>();
-        ProducerProperties producerProperties = new ProducerProperties();
-        Map<String, String> property = producerProperties.getPropValues();
-        kafkaParams.put("bootstrap.servers", property.get("BOOTSTRAP-SERVERS").toString());
+        kafkaParams.put("bootstrap.servers", property.get("BOOTSTRAP-SERVERS"));
         kafkaParams.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("group.id", "test-consumer-group");
@@ -81,8 +78,8 @@ public class SparkConsumerStreaming {
                     return RowFactory.create(line.value());
                 }
             });
-            // String _name = dft.format(now);
-            // jrdd.saveAsTextFile(path + _name);
+            String _name = dft.format(now);
+            jrdd.saveAsTextFile(path + _name);
             // Long size=fs.getFileStatus(new Path(_name)).getLen();
             // System.out.println("Size of the data in bytes = "+size);
         });
