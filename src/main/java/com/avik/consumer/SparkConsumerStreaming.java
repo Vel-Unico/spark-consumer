@@ -1,5 +1,6 @@
 package com.avik.consumer;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -15,6 +16,7 @@ import org.apache.spark.api.java.function.*;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.api.java.*;
 import org.apache.spark.streaming.kafka010.*;
+import org.json.simple.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -66,7 +68,7 @@ public class SparkConsumerStreaming {
         stream.foreachRDD(rdd -> {
             rdd.foreach(line -> {
                 System.out.println(line.value());
-                // sendMessage(args[0], line.value());
+                sendMessage(args[2], args[0], line.value());
             });
 
             LocalDateTime now = LocalDateTime.now();
@@ -88,14 +90,27 @@ public class SparkConsumerStreaming {
         jsc.awaitTermination();
     }
 
-    public static void sendMessage(String topic, String message) throws IOException {
+    public static void sendMessage(String baseUrl, String topic, String message) throws IOException {
         System.out.println("TOPIC - " + topic + "\n" + "MESSAGE - " + message);
-        URL obj = new URL("http://52.170.112.45:4000/publish/" + topic + "/" + URLEncoder.encode(message, "UTF-8"));
+        URL obj = new URL(baseUrl + "/send");
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-        con.setRequestMethod("GET");
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+        con.setDoOutput(true);
+        con.setDoInput(true);
         con.setRequestProperty("User-Agent", "Mozilla/5.0");
+        JSONObject body = new JSONObject();
+        body.put("topicName", topic);
+        body.put("message", message);
+        String postJsonData = body.toString();
+        con.setDoOutput(true);
+        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+        wr.writeBytes(postJsonData);
+        wr.flush();
+        wr.close();
+
         int responseCode = con.getResponseCode();
-        System.out.println("GET Response Code :: " + responseCode);
+
         if (responseCode == HttpURLConnection.HTTP_OK) { // success
             System.out.println("TOPIC - " + topic + "\n" + "MESSAGE - " + message);
         } else {
