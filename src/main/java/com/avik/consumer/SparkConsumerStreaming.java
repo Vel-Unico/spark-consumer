@@ -23,14 +23,16 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 
 public class SparkConsumerStreaming {
 
     private static final Logger LOGGER = Logger.getLogger(SparkConsumerStreaming.class);
-
+    private static SparkSession ss;
     public static void main(String[] args) throws InterruptedException, IOException {
         Logger.getLogger("org").setLevel(Level.ERROR);
         Logger.getLogger("akka").setLevel(Level.ERROR);
@@ -38,9 +40,10 @@ public class SparkConsumerStreaming {
         Map<String, String> property = producerProperties.getPropValues();
 
         // System.setProperty("hadoop.home.dir", "F:\\avik\\winutils");
-        SparkSession ss = SparkSession.builder().getOrCreate();
+        
 
         SparkConf conf = new SparkConf().setMaster("local[2]").setAppName("SparkConsumerStreaming");
+        ss= SparkSession.builder().config(conf).getOrCreate();
         Configuration hconf = new Configuration();
         FileSystem fs = FileSystem.get(hconf);
         JavaSparkContext sc = new JavaSparkContext(ss.sparkContext());
@@ -74,7 +77,7 @@ public class SparkConsumerStreaming {
             LocalDateTime now = LocalDateTime.now();
             System.out.println(path + dft.format(now));
 
-            JavaRDD jrdd = rdd.map(new Function<ConsumerRecord<String, String>, Row>() {
+            JavaRDD<Row> jrdd = rdd.map(new Function<ConsumerRecord<String, String>, Row>() {
                 @Override
                 public Row call(ConsumerRecord<String, String> line) throws Exception {
                     return RowFactory.create(line.value());
@@ -82,6 +85,7 @@ public class SparkConsumerStreaming {
             });
             String _name = dft.format(now);
             jrdd.saveAsTextFile(path + _name);
+            createBlobAccount(jrdd);
             // Long size=fs.getFileStatus(new Path(_name)).getLen();
             // System.out.println("Size of the data in bytes = "+size);
         });
@@ -90,7 +94,17 @@ public class SparkConsumerStreaming {
         jsc.awaitTermination();
     }
 
-    public static void sendMessage(String baseUrl, String topic, String message) throws IOException {
+    public static void createBlobAccount(JavaRDD jrdd) {
+    	String accountName = "blobconnectors";
+    	String accountKey="p5AS3NlUWATnh4oGbeuhBpYLHPEuTsWwMIX0aVh/M0KwiTFPPTRbvtWgi5XdG8xBnLXpYTzE6CrAyfE20o+G5Q==";
+    	String containerName="blobcontainer";
+    	String folderName="Kafka";
+    	ss.sparkContext().conf().set("fs.azure.account.key."+accountName+".blob.core.windows.net", accountKey);
+    	Dataset<Row> sourceData=ss.createDataFrame(jrdd, Row.class);
+    	sourceData.write().option("header", "true").format("CSV").mode(SaveMode.Append).save("wasbs://"+containerName+"@"+accountName+".blob.core.windows.net/"+folderName);    	
+	}
+
+	public static void sendMessage(String baseUrl, String topic, String message) throws IOException {
         System.out.println("TOPIC - " + topic + "\n" + "MESSAGE - " + message);
         URL obj = new URL(baseUrl + "/send");
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
