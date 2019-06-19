@@ -97,7 +97,7 @@ public class SparkConsumerStreaming {
     public static void createBlobAccount(JavaRDD jrdd, String _name) {
     	String accessKey = "AKIA3F7XRLHHEKE7TZWY";
     	String secretId="7cZ2RZrzatcnmRxZD7cs+kz66EoiSuktLIR+Cp+V";
-    	String bucketName="avikcloud";
+    	String bucketName="testawsavik";
     	String folderName=_name;
     	ss.sparkContext().hadoopConfiguration().set("fs.s3n.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem");
     	//ss.sparkContext().conf().set("fs.azure.account.key."+accountName+".blob.core.windows.net", accountKey);
