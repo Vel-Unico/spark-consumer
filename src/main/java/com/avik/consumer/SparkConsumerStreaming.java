@@ -85,7 +85,7 @@ public class SparkConsumerStreaming {
             });
             String _name = dft.format(now);
             jrdd.saveAsTextFile(path + _name);
-            createBlobAccount(jrdd);
+            createBlobAccount(jrdd,_name);
             // Long size=fs.getFileStatus(new Path(_name)).getLen();
             // System.out.println("Size of the data in bytes = "+size);
         });
@@ -94,14 +94,17 @@ public class SparkConsumerStreaming {
         jsc.awaitTermination();
     }
 
-    public static void createBlobAccount(JavaRDD jrdd) {
-    	String accountName = "blobconnectors";
-    	String accountKey="p5AS3NlUWATnh4oGbeuhBpYLHPEuTsWwMIX0aVh/M0KwiTFPPTRbvtWgi5XdG8xBnLXpYTzE6CrAyfE20o+G5Q==";
-    	String containerName="blobcontainer";
-    	String folderName="Kafka";
-    	ss.sparkContext().conf().set("fs.azure.account.key."+accountName+".blob.core.windows.net", accountKey);
+    public static void createBlobAccount(JavaRDD jrdd, String _name) {
+    	String accessKey = "AKIA3F7XRLHHEKE7TZWY";
+    	String secretId="7cZ2RZrzatcnmRxZD7cs+kz66EoiSuktLIR+Cp+V";
+    	String bucketName="avikcloud";
+    	String folderName=_name;
+    	ss.sparkContext().hadoopConfiguration().set("fs.s3n.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem");
+    	//ss.sparkContext().conf().set("fs.azure.account.key."+accountName+".blob.core.windows.net", accountKey);
     	Dataset<Row> sourceData=ss.createDataFrame(jrdd, Row.class);
-    	sourceData.write().option("header", "true").format("CSV").mode(SaveMode.Append).save("wasbs://"+containerName+"@"+accountName+".blob.core.windows.net/"+folderName);    	
+    	sourceData.write().option("header", "true").format("CSV").mode(SaveMode.Overwrite)
+		.save("s3n://"+accessKey+":"+secretId+"@"+bucketName+"/"+folderName); 
+    	//sourceData.write().option("header", "true").format("CSV").mode(SaveMode.Overwrite).save("wasbs://"+containerName+"@"+accountName+".blob.core.windows.net/"+folderName);    	
 	}
 
 	public static void sendMessage(String baseUrl, String topic, String message) throws IOException {
