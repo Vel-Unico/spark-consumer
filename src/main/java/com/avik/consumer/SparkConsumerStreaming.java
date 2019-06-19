@@ -77,7 +77,7 @@ public class SparkConsumerStreaming {
             LocalDateTime now = LocalDateTime.now();
             System.out.println(path + dft.format(now));
 
-            JavaRDD<Row> jrdd = rdd.map(new Function<ConsumerRecord<String, String>, Row>() {
+            JavaRDD jrdd = rdd.map(new Function<ConsumerRecord<String, String>, Row>() {
                 @Override
                 public Row call(ConsumerRecord<String, String> line) throws Exception {
                     return RowFactory.create(line.value());
@@ -85,7 +85,7 @@ public class SparkConsumerStreaming {
             });
             String _name = dft.format(now);
             jrdd.saveAsTextFile(path + _name);
-            createBlobAccount(jrdd,_name);
+            //createBlobAccount(jrdd,_name);
             // Long size=fs.getFileStatus(new Path(_name)).getLen();
             // System.out.println("Size of the data in bytes = "+size);
         });
