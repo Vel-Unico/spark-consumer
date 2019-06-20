@@ -41,12 +41,12 @@ public class SparkConsumerStreaming {
         ProducerProperties producerProperties = new ProducerProperties();
         Map<String, String> property = producerProperties.getPropValues();
 
-         System.setProperty("hadoop.home.dir", "D:\\avik\\winutils");
+        // System.setProperty("hadoop.home.dir", "D:\\avik\\winutils");
         
-        //ss=SparkSession.builder().getOrCreate();
+        ss=SparkSession.builder().getOrCreate();
         SparkConf conf = new SparkConf().setMaster("local[2]").setAppName("SparkConsumerStreaming");
         SparkContext ssc=  new SparkContext(conf);
-        ss= SparkSession.builder().config(conf).getOrCreate();
+        //ss= SparkSession.builder().config(conf).getOrCreate();
         Configuration hconf = new Configuration();
         FileSystem fs = FileSystem.get(hconf);
         JavaSparkContext sc = new JavaSparkContext(ss.sparkContext());
@@ -54,7 +54,7 @@ public class SparkConsumerStreaming {
         JavaStreamingContext jsc = new JavaStreamingContext(sc,new Duration(Integer.valueOf("1000")));
 
         Map<String, Object> kafkaParams = new HashMap<String, Object>();
-        kafkaParams.put("bootstrap.servers", "wn0-kafka1.r0dcnobojnzuxj5a1p23pnnv0a.bx.internal.cloudapp.net:9092,wn1-kafka1.r0dcnobojnzuxj5a1p23pnnv0a.bx.internal.cloudapp.net:9092");
+        kafkaParams.put("bootstrap.servers", "BOOTSTRAP-SERVERS");
         kafkaParams.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("group.id", "test-consumer-group");
@@ -90,7 +90,7 @@ public class SparkConsumerStreaming {
             String _name = dft.format(now);
             String fullPath=path + _name;
            // jrdd.saveAsTextFile(path + _name);
-           RDD<String> data= ssc.textFile(fullPath, 2);
+          // RDD<String> data= ssc.textFile(fullPath, 2);
             createBlobAccount(jrdd,_name);
             // Long size=fs.getFileStatus(new Path(_name)).getLen();
             // System.out.println("Size of the data in bytes = "+size);
