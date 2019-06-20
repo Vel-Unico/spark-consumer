@@ -50,8 +50,7 @@ public class SparkConsumerStreaming {
         Configuration hconf = new Configuration();
         FileSystem fs = FileSystem.get(hconf);
         JavaSparkContext sc = new JavaSparkContext(ss.sparkContext());
-        //JavaStreamingContext jsc = new JavaStreamingContext(sc, new Duration(Integer.valueOf(args[1])));
-        JavaStreamingContext jsc = new JavaStreamingContext(sc,new Duration(Integer.valueOf("1000")));
+        JavaStreamingContext jsc = new JavaStreamingContext(sc, new Duration(Integer.valueOf(args[1])));
 
         Map<String, Object> kafkaParams = new HashMap<String, Object>();
         kafkaParams.put("bootstrap.servers", "BOOTSTRAP-SERVERS");
@@ -60,8 +59,7 @@ public class SparkConsumerStreaming {
         kafkaParams.put("group.id", "test-consumer-group");
         // kafkaParams.put("auto.offset.reset", args[2]);
 
-       // Collection<String> topics = Arrays.asList(args[0]);// args[0] topic name
-        Collection<String> topics = Arrays.asList("test");// args[0] topic name
+       Collection<String> topics = Arrays.asList(args[0]);// args[0] topic name
         JavaInputDStream<ConsumerRecord<String, String>> stream = KafkaUtils.createDirectStream(jsc,
                 LocationStrategies.PreferConsistent(),
                 ConsumerStrategies.<String, String>Subscribe(topics, kafkaParams));
