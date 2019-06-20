@@ -11,8 +11,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
+import org.apache.spark.rdd.RDD;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.api.java.*;
 import org.apache.spark.streaming.kafka010.*;
@@ -39,25 +41,27 @@ public class SparkConsumerStreaming {
         ProducerProperties producerProperties = new ProducerProperties();
         Map<String, String> property = producerProperties.getPropValues();
 
-        // System.setProperty("hadoop.home.dir", "F:\\avik\\winutils");
+         System.setProperty("hadoop.home.dir", "D:\\avik\\winutils");
         
-        ss=SparkSession.builder().getOrCreate();
+        //ss=SparkSession.builder().getOrCreate();
         SparkConf conf = new SparkConf().setMaster("local[2]").setAppName("SparkConsumerStreaming");
-        //ss= SparkSession.builder().config(conf).getOrCreate();
+        SparkContext ssc=  new SparkContext(conf);
+        ss= SparkSession.builder().config(conf).getOrCreate();
         Configuration hconf = new Configuration();
         FileSystem fs = FileSystem.get(hconf);
         JavaSparkContext sc = new JavaSparkContext(ss.sparkContext());
-        JavaStreamingContext jsc = new JavaStreamingContext(sc, new Duration(Integer.valueOf(args[1])));
+        //JavaStreamingContext jsc = new JavaStreamingContext(sc, new Duration(Integer.valueOf(args[1])));
+        JavaStreamingContext jsc = new JavaStreamingContext(sc,new Duration(Integer.valueOf("1000")));
 
         Map<String, Object> kafkaParams = new HashMap<String, Object>();
-        kafkaParams.put("bootstrap.servers", "BOOTSTRAP-SERVERS");
+        kafkaParams.put("bootstrap.servers", "wn0-kafka1.r0dcnobojnzuxj5a1p23pnnv0a.bx.internal.cloudapp.net:9092,wn1-kafka1.r0dcnobojnzuxj5a1p23pnnv0a.bx.internal.cloudapp.net:9092");
         kafkaParams.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("group.id", "test-consumer-group");
         // kafkaParams.put("auto.offset.reset", args[2]);
 
-        Collection<String> topics = Arrays.asList(args[0]);// args[0] topic name
-
+       // Collection<String> topics = Arrays.asList(args[0]);// args[0] topic name
+        Collection<String> topics = Arrays.asList("test");// args[0] topic name
         JavaInputDStream<ConsumerRecord<String, String>> stream = KafkaUtils.createDirectStream(jsc,
                 LocationStrategies.PreferConsistent(),
                 ConsumerStrategies.<String, String>Subscribe(topics, kafkaParams));
@@ -84,8 +88,10 @@ public class SparkConsumerStreaming {
                 }
             });
             String _name = dft.format(now);
-            jrdd.saveAsTextFile(path + _name);
-            //createBlobAccount(jrdd,_name);
+            String fullPath=path + _name;
+           // jrdd.saveAsTextFile(path + _name);
+           RDD<String> data= ssc.textFile(fullPath, 2);
+            createBlobAccount(jrdd,_name);
             // Long size=fs.getFileStatus(new Path(_name)).getLen();
             // System.out.println("Size of the data in bytes = "+size);
         });
@@ -99,11 +105,15 @@ public class SparkConsumerStreaming {
     	String secretId="7cZ2RZrzatcnmRxZD7cs+kz66EoiSuktLIR+Cp+V";
     	String bucketName="testawsavik";
     	String folderName=_name;
-    	ss.sparkContext().hadoopConfiguration().set("fs.s3n.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem");
+    	String accountName="blobconnectors";
+		String accountKey="p5AS3NlUWATnh4oGbeuhBpYLHPEuTsWwMIX0aVh/M0KwiTFPPTRbvtWgi5XdG8xBnLXpYTzE6CrAyfE20o+G5Q==";
+		String containerName = "blobcontainer";
+		ss.sparkContext().hadoopConfiguration().set("fs.s3n.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem");
     	//ss.sparkContext().conf().set("fs.azure.account.key."+accountName+".blob.core.windows.net", accountKey);
-    	Dataset<Row> sourceData=ss.createDataFrame(jrdd, Row.class);
-    	sourceData.write().option("header", "true").format("CSV").mode(SaveMode.Overwrite)
-		.save("s3n://"+accessKey+":"+secretId+"@"+bucketName+"/"+folderName); 
+    	//jrdd.saveAsTextFile("wasbs://"+containerName+"@"+accountName+".blob.core.windows.net/"+folderName);
+		jrdd.saveAsTextFile("s3n://"+accessKey+":"+secretId+"@"+bucketName+"/"+folderName);
+		//sourceData.write().option("header", "true").format("CSV").mode(SaveMode.Overwrite)
+		//.save("s3n://"+accessKey+":"+secretId+"@"+bucketName+"/"+folderName); 
     	//sourceData.write().option("header", "true").format("CSV").mode(SaveMode.Overwrite).save("wasbs://"+containerName+"@"+accountName+".blob.core.windows.net/"+folderName);    	
 	}
 
