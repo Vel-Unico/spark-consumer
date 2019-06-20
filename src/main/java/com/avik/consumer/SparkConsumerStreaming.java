@@ -22,6 +22,7 @@ import org.json.simple.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -45,7 +46,6 @@ public class SparkConsumerStreaming {
         
         ss=SparkSession.builder().getOrCreate();
         SparkConf conf = new SparkConf().setMaster("local[2]").setAppName("SparkConsumerStreaming");
-        SparkContext ssc=  new SparkContext(conf);
         //ss= SparkSession.builder().config(conf).getOrCreate();
         Configuration hconf = new Configuration();
         FileSystem fs = FileSystem.get(hconf);
@@ -89,9 +89,8 @@ public class SparkConsumerStreaming {
             });
             String _name = dft.format(now);
             String fullPath=path + _name;
-           // jrdd.saveAsTextFile(path + _name);
-          // RDD<String> data= ssc.textFile(fullPath, 2);
-            createBlobAccount(jrdd,_name);
+            jrdd.saveAsTextFile(path + _name);
+           // createBlobAccount(jrdd,_name);
             // Long size=fs.getFileStatus(new Path(_name)).getLen();
             // System.out.println("Size of the data in bytes = "+size);
         });
@@ -109,7 +108,13 @@ public class SparkConsumerStreaming {
 		String accountKey="p5AS3NlUWATnh4oGbeuhBpYLHPEuTsWwMIX0aVh/M0KwiTFPPTRbvtWgi5XdG8xBnLXpYTzE6CrAyfE20o+G5Q==";
 		String containerName = "blobcontainer";
 		ss.sparkContext().hadoopConfiguration().set("fs.s3n.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem");
-    	//ss.sparkContext().conf().set("fs.azure.account.key."+accountName+".blob.core.windows.net", accountKey);
+		String hdfsDirPath = ("hdfs://localhost"+ _name);
+		Configuration conf = new Configuration();
+		conf.addResource(new Path("/etc/hadoop/core-site.xml"));
+		conf.addResource(new Path("/etc/hadoop/hdfs-site.xml"));
+		conf.set("fs.hdfs.impl", DistributedFileSystem.class.getName());
+		Path location = new Path(hdfsDirPath); 
+		//ss.sparkContext().conf().set("fs.azure.account.key."+accountName+".blob.core.windows.net", accountKey);
     	//jrdd.saveAsTextFile("wasbs://"+containerName+"@"+accountName+".blob.core.windows.net/"+folderName);
 		jrdd.saveAsTextFile("s3n://"+accessKey+":"+secretId+"@"+bucketName+"/"+folderName);
 		//sourceData.write().option("header", "true").format("CSV").mode(SaveMode.Overwrite)
