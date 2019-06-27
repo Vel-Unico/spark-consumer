@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
@@ -20,8 +21,10 @@ import org.apache.spark.streaming.api.java.*;
 import org.apache.spark.streaming.kafka010.*;
 import org.json.simple.JSONObject;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.log4j.Level;
@@ -67,7 +70,7 @@ public class SparkConsumerStreaming {
         System.out.println("start1");
 
         // String path = "output/file-";
-        String path = "/user/hadoop/test/";
+        //String path = "/user/hadoop/test/";
         DateTimeFormatter dft = DateTimeFormatter.ofPattern("HH-mm-ss");
 
         stream.foreachRDD(rdd -> {
@@ -77,7 +80,7 @@ public class SparkConsumerStreaming {
             });
 
             LocalDateTime now = LocalDateTime.now();
-            System.out.println(path + dft.format(now));
+            //System.out.println(path + dft.format(now));
 
             JavaRDD jrdd = rdd.map(new Function<ConsumerRecord<String, String>, Row>() {
                 @Override
@@ -85,9 +88,10 @@ public class SparkConsumerStreaming {
                     return RowFactory.create(line.value());
                 }
             });
-            String _name = dft.format(now);
-            String fullPath=path + _name;
-            jrdd.saveAsTextFile(path + _name);
+            //String _name = dft.format(now);
+            //String fullPath=path + _name;
+            //jrdd.saveAsTextFile(path + _name);
+            write(jrdd);
            // createBlobAccount(jrdd,_name);
             // Long size=fs.getFileStatus(new Path(_name)).getLen();
             // System.out.println("Size of the data in bytes = "+size);
@@ -148,4 +152,45 @@ public class SparkConsumerStreaming {
         }
     }
 
+	
+	public static void write(JavaRDD data){
+		FSDataOutputStream out = null;
+		try {
+
+			Configuration conf = new Configuration();
+			conf.set("dfs.support.append", "true");
+			conf.setBoolean("dfs.support.append", true);
+			String url = "/user/hadoop/avik";
+			FileSystem fs = FileSystem.get(URI.create(url), conf);
+			boolean flag = Boolean.getBoolean(fs.getConf().get("dfs.support.append"));
+			Path npath = new Path(url);
+			if(fs.exists(npath)){
+			out = fs.append(npath);
+			}else{
+			out = fs.create(npath);
+			}
+
+			fs.setPermission(npath, FsPermission.createImmutable((short) 0777));
+
+			Iterator rowData = data.toLocalIterator();
+
+			while (rowData.hasNext()) {
+				out.writeBytes(rowData.next().toString());
+				out.writeBytes("\n");
+			}
+
+			out.flush();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Exception in writeToHDFS - " + e.getMessage());
+		} finally {
+			try {
+				if (null != out)
+					out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }
